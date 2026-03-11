@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽签</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .info {
+            text-align: center;
+            margin-bottom: 24px;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 6px;
+            color: #666;
+        }
+        
+        .draw-btn {
+            width: 100%;
+            padding: 16px;
+            font-size: 16px;
+            background: #1677ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 24px;
+        }
+        
+        .draw-btn:hover:not(:disabled) {
+            background: #4096ff;
+        }
+        
+        .draw-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .result-box {
+            background: #f0f5ff;
+            border: 1px solid #d6e4ff;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .result-box h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .result-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .result-item {
+            background: #1677ff;
+            color: white;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 15px;
+        }
+        
+        .reset-btn {
+            width: 100%;
+            padding: 12px;
+            font-size: 14px;
+            background: white;
+            color: #1677ff;
+            border: 1px solid #1677ff;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        
+        .reset-btn:hover {
+            background: #f0f5ff;
+        }
+        
+        .participants {
+            border-top: 1px solid #e8e8e8;
+            padding-top: 20px;
+            margin-top: 20px;
+        }
+        
+        .participants h3 {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        .participants-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .participant {
+            background: #f5f5f5;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            color: #666;
+        }
+        
+        .participant.drawn {
+            background: #e6f7ff;
+            color: #1677ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>抽签（36人中抽取8人）</h1>
+        
+        <div class="info">共36人，一次性抽取8人</div>
+        
+        <button class="draw-btn" id="drawBtn" onclick="draw()">开始抽签</button>
+        
+        <div class="result-box" id="resultBox" style="display: none;">
+            <h3>抽取结果（8人）</h3>
+            <div class="result-list" id="resultList"></div>
+        </div>
+        
+        <button class="reset-btn" id="resetBtn" onclick="resetDraw()" style="display: none;">重新抽签</button>
+        
+        <div class="participants">
+            <h3>全部人员名单</h3>
+            <div class="participants-list" id="participantsList"></div>
+        </div>
+    </div>
+
+    <script>
+        const participants = [
+            "姚振华", "郑继", "陈乾", "陈文燕", "侯森林", "胡斐",
+            "林云飞", "刘宇昂", "任彬莹", "申屠海三", "吴华彬", "项叶峰",
+            "徐杨杨", "张聪", "张宪强", "赵晗", "高勇", "高有煌",
+            "刘星辰", "申洋", "隋晓宇", "王卫", "杨文存", "尹盛",
+            "袁佳菲", "张肖", "张仲华", "乐乐", "林涛", "卢芳",
+            "邵宇乔", "唐海潇", "徐一丰", "袁斌", "袁宗瑞", "朱莹莹"
+        ];
+        
+        let drawn = [];
+        
+        function init() {
+            renderParticipants();
+        }
+        
+        function renderParticipants() {
+            const list = document.getElementById('participantsList');
+            list.innerHTML = participants.map(name => {
+                const isDrawn = drawn.includes(name);
+                return `<span class="participant ${isDrawn ? 'drawn' : ''}">${name}</span>`;
+            }).join('');
+        }
+        
+        function draw() {
+            const btn = document.getElementById('drawBtn');
+            btn.disabled = true;
+            btn.textContent = '抽签中...';
+            
+            // 复制数组并随机打乱
+            const shuffled = [...participants].sort(() => Math.random() - 0.5);
+            
+            // 取前8个
+            drawn = shuffled.slice(0, 8);
+            
+            // 显示结果
+            renderResults();
+            renderParticipants();
+            
+            btn.textContent = '已完成';
+            document.getElementById('resetBtn').style.display = 'block';
+        }
+        
+        function renderResults() {
+            const box = document.getElementById('resultBox');
+            const list = document.getElementById('resultList');
+            
+            box.style.display = 'block';
+            list.innerHTML = drawn.map(name => 
+                `<span class="result-item">${name}</span>`
+            ).join('');
+        }
+        
+        function resetDraw() {
+            drawn = [];
+            
+            document.getElementById('drawBtn').disabled = false;
+            document.getElementById('drawBtn').textContent = '开始抽签';
+            document.getElementById('resultBox').style.display = 'none';
+            document.getElementById('resetBtn').style.display = 'none';
+            
+            renderParticipants();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
